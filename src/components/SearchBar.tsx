@@ -7,9 +7,16 @@ interface SearchBarProps {
 
 const SearchBar: FC<SearchBarProps> = ({ onSelectLocation }) => {
   const [query, setQuery] = useState<string>('');
+  const [initialQuery, setInitialQuery] = useState<string>('');
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInitialQuery(value);
+    setQuery(value);
+  };
 
   useEffect(() => {
     const searchTimeout = setTimeout(async () => {
@@ -31,6 +38,13 @@ const SearchBar: FC<SearchBarProps> = ({ onSelectLocation }) => {
   const handleLocationSelect = (location: Location) => {
     onSelectLocation(location);
     setQuery(location.LocalizedName);
+    setInitialQuery(
+      location.LocalizedName +
+        ', ' +
+        location.AdministrativeArea.LocalizedName +
+        ', ' +
+        location.Country.LocalizedName
+    );
     setShowDropdown(false);
   };
 
@@ -39,8 +53,8 @@ const SearchBar: FC<SearchBarProps> = ({ onSelectLocation }) => {
       <div className="relative">
         <input
           type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
+          value={initialQuery}
+          onChange={handleInputChange}
           placeholder="Search for a city..."
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
