@@ -71,7 +71,9 @@ export interface Forecast {
 }
 
 // Search for locations
-export const searchLocations = async (query: string): Promise<Location[]> => {
+export const searchLocations = async (
+  query: string
+): Promise<{ locations: Location[]; error?: string }> => {
   try {
     const response = await axios.get(
       `${ACCUWEATHER_BASE_URL}${ENDPOINTS.AUTOCOMPLETE}`,
@@ -82,10 +84,20 @@ export const searchLocations = async (query: string): Promise<Location[]> => {
         },
       }
     );
-    return response.data;
+    return { locations: response.data };
   } catch (error) {
     console.error('Error searching locations:', error);
-    return [];
+    let errorMessage = 'Failed to search locations';
+    if (axios.isAxiosError(error) && error.response) {
+      if (error.response.status === 401) {
+        errorMessage = 'Invalid API key or authorization error';
+      } else if (error.response.status === 503) {
+        errorMessage = 'Service unavailable, please try again later';
+      } else if (error.response.data && error.response.data.Message) {
+        errorMessage = error.response.data.Message;
+      }
+    }
+    return { locations: [], error: errorMessage };
   }
 };
 

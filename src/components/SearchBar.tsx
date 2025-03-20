@@ -11,20 +11,29 @@ const SearchBar: FC<SearchBarProps> = ({ onSelectLocation }) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInitialQuery(value);
     setQuery(value);
+    setError(null); // Clear error when user types
   };
 
   useEffect(() => {
     const searchTimeout = setTimeout(async () => {
       if (query.length >= 3) {
         setIsLoading(true);
-        const results = await searchLocations(query);
-        setLocations(results);
-        setShowDropdown(results.length > 0);
+        setError(null);
+        const result = await searchLocations(query);
+        if (result.error) {
+          setError(result.error);
+          setLocations([]);
+          setShowDropdown(false);
+        } else {
+          setLocations(result.locations);
+          setShowDropdown(result.locations.length > 0);
+        }
         setIsLoading(false);
       } else {
         setLocations([]);
@@ -64,6 +73,9 @@ const SearchBar: FC<SearchBarProps> = ({ onSelectLocation }) => {
           </div>
         )}
       </div>
+
+      {/* Error message display */}
+      {error && <div className="mt-1 ml-4 text-sm text-red-600">{error}</div>}
 
       {showDropdown && (
         <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto">
